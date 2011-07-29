@@ -1,0 +1,160 @@
+body {
+    background-color: #000;
+    color: #222;
+    font-family: Helvetica;
+    font-size: 14pt;
+    margin: 0;
+    padding: 0;
+}
+
+#header h1 {
+    margin: 0;
+    padding: 0;
+}
+
+#header h1 a {
+    background-color: #ccc;
+    border-botton: 1px solid #666;
+    color: #222;
+    display: block;
+    font-size: 14pt;
+    font-weight: bold;
+    padding: 5px 0;
+    text-align: center;
+    text-decoration: none;
+    text-shadow: 0px 1px 1px #fff;
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#ccc), to(#999));
+}
+
+.content ul {
+    list-style: none;
+    margin: 10px;
+    padding: 0;
+}
+
+.content ul li {
+    background-color: #ffffff;
+    border: 1px solid #999999;
+    color: #222222;
+    display: block;
+    font-size: 14pt;
+    font-weight: bold;
+    margin-bottom: -1px;
+    padding: 0px 10px;
+    text-decoration: none;
+}
+
+.content ul li:first-child {
+    -webkit-border-top-left-radius: 8px;
+    -webkit-border-top-right-radius: 8px;
+}
+
+.content ul li:last-child {
+    -webkit-border-bottom-left-radius: 8px;
+    -webkit-border-bottom-right-radius: 8px;
+}
+
+.content ul li .normal {
+    font-size: 14pt;
+    font-weight: normal;
+}
+
+.content {
+    padding: 3px;
+}
+
+h2.subTitle {
+    font-size: 12pt;
+    font-weight: bold;
+    color: #fff;
+}
+
+#menu {
+    display: none;
+    position:fixed;
+    background:#eee;
+    border:1px solid #00ccff;
+    width:100%; 
+    z-index:100;
+    left:0px;
+    bottom:0px;
+    padding:0px;
+}
+
+#menu button {
+    width: 49%;
+    border-bottom: 0px;
+    border-top: 0px;
+    border-left: 0px;    
+    border-right: 1px solid #777;
+    text-decoration: none;
+    color: #000;
+    font-size: 10pt;
+    background-color: #eee;
+    padding:0px;
+}
+
+#menu button:active {
+    background-color: #000000;
+}
+
+#preferences {
+    display: none;
+    background-color: #00000;
+    color: #fff;
+}
+
+#smlHeader h1 {
+    margin: 0;
+    padding: 0;
+}
+
+#smlHeader h1 a {
+    background-color: #0000ff;
+    border-botton: 1px solid #666;
+    display: block;
+    color: #fff;
+    font-size: 12pt;
+    font-weight: bold;
+    padding: 10px 0;
+    text-align: left;
+    text-decoration: none;
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#0000ff), to(#0000CC));
+}
+
+#prefMain {
+    padding: 0px 10px;
+}
+
+#prefMain button {
+    width: 100%;
+    vertical-align: center;
+    background-color: #ffffff;
+    border: 1px solid #999999;
+    display: block;
+    font-size: 17px;
+    font-weight: bold;
+    margin-bottom: -1px;
+    padding: 12px 10px;
+    text-decoration: none;
+    -webkit-tap-highlight-color:  rgba(255, 255, 255, 0);
+}
+
+.leftBtn, .rightBtn {
+    color: #222222;
+}
+
+.leftBtn, .leftBtnSel {
+    -webkit-border-top-left-radius: 8px;
+    -webkit-border-top-right-radius: 8px;
+}
+
+.rightBtn, .rightBtnSel {
+    -webkit-border-bottom-right-radius: 8px;
+    -webkit-border-bottom-left-radius: 8px;
+}
+
+.leftBtnSel, .rightBtnSel {
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#0000FF), to(#0000EE));
+    color: #ffffff;
+}

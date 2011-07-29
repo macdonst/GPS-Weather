@@ -1,0 +1,309 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+                      "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <title>GPS Weather</title>
+    <meta name="viewport" content="width=device-width; user-scalable=no" />
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+
+    <link rel="stylesheet" type="text/css" href="css/android.css"/>
+    <!--link rel="stylesheet" type="text/css" href="css/android.css" media="only screen and (max-width: 480px)" />
+    <link rel="stylesheet" type="text/css" href="css/android-tablet.css" media="screen and (min-width: 481px)" /-->
+
+    <script type="text/javascript" charset="utf-8" src="phonegap-0.9.6.1.js"></script>
+    <script type="text/javascript" charset="utf-8">
+        
+    // Global Variables
+    var dirtyBit = false;
+
+    // Wait for PhoneGap to load
+    // 
+    function onLoad() {
+        document.addEventListener("deviceready", onDeviceReady, false);
+    }
+
+    // PhoneGap is loaded and it is now safe to make calls PhoneGap methods
+    //
+    function onDeviceReady() {
+        console.log("We got a device ready");
+        document.addEventListener("menubutton", onMenuKeyDown, false);
+        navigator.notification.activityStart();
+        if (localStorage.getItem('gps') == "on") {
+            navigator.geolocation.getCurrentPosition(onSuccess, onError, {
+                enableHighAccuracy: true
+            });
+        } else {
+            onSuccess({"coords": {"latitude": 45.35003, "longitude": -75.829940}});
+        }
+        //onSuccess();
+    }
+    
+    // onSuccess Geolocation
+    //
+    function onSuccess(loc) {
+        console.log("Current location: ("+loc.coords.latitude+","+loc.coords.longitude+")");
+        
+        var latitude = "" + loc.coords.latitude;
+        var longitude = "" + loc.coords.longitude;
+        
+        if (latitude.substring(0, 1) === "-") {
+            latitude = "" + latitude.substring(0, 3) + latitude.substring(4, 9);
+        }
+        else {
+            latitude = "" + latitude.substring(0, 2) + latitude.substring(3, 8);
+        }
+        if (longitude.substring(0, 1) === "-") {
+            longitude = "" + longitude.substring(0, 3) + longitude.substring(4, 9);
+        }
+        else {
+            longitude = "" + longitude.substring(0, 2) + longitude.substring(3, 8);
+        }        
+        console.log("Lat: " + latitude + " Long: " + longitude);
+       
+        // Do weather lookup
+        var newHtml = "";
+        var newForecast = "";
+        var url = "http://www.google.com/ig/api?weather=,,,"+latitude+","+longitude+"";
+        //var url = "http://www.google.com/ig/api?weather=,,,4535003,-75829940";
+        
+        var req = new XMLHttpRequest();
+        console.log("Weather Lookup: requested url: " + url);
+        req.open("GET", url, true);
+        req.onreadystatechange = function() {
+            //console.log("req.readyState = " + req.readyState);
+            if (req.readyState == 4) {
+                //for (prop in req) {
+                //    console.log("Prop = " + prop + " value = " + req[prop]);
+                //}
+                //var myXML = req.responseXML;
+                console.log("status=" + req.status);
+                console.log("response=" + req.responseXML);
+                var currentConditions = req.responseXML.getElementsByTagName("current_conditions");
+                var forecastConditions = req.responseXML.getElementsByTagName("forecast_conditions");
+                
+                console.log("Checking current conditions");
+                console.log("Length = " + currentConditions.length);
+                for (prop in currentConditions) {
+                    console.log("prop = " + prop);
+                }
+                newHtml += "<ul>";
+                //for (i=0; i<currentConditions.length; i++) {
+                    var currentTemp = null;
+                    console.log("Units is set to = " + localStorage.getItem('units'));
+                    if (localStorage.getItem('units') == "C") {
+                        console.log("currentTemp: " + currentConditions[0].getElementsByTagName('temp_c')[0].attributes.getNamedItem('data').value);
+                        currentTemp = currentConditions[0].getElementsByTagName('temp_c')[0].attributes.getNamedItem('data').value + "&deg;C";
+                    } else {
+                        console.log("value: " + currentConditions[0].getElementsByTagName('temp_f')[0].attributes.getNamedItem('data').value);
+                        currentTemp = req.responseXML.getElementsByTagName("current_conditions")[0].getElementsByTagName('temp_f')[0].attributes.getNamedItem('data').value + "&deg;F";
+                    }
+                    newHtml += "<li>" +
+                        "<table>" +
+                        "<tr>" +
+                        "<td>" +
+                        "<img src='images" + extractFileName(currentConditions[0].getElementsByTagName('icon')[0].attributes.getNamedItem('data').value) + "'/>" +
+                        "</td>" + 
+                        "<td>" +
+                        "" + currentConditions[0].getElementsByTagName('condition')[0].attributes.getNamedItem('data').value + 
+                        "<br/>" + currentTemp +
+                        "</td>" + 
+                        "</table>" +
+                        "</li>";
+                //}                
+                newHtml += "</ul>";
+                var element = document.getElementById('current');
+                element.innerHTML = newHtml;
+
+                console.log("Checking forecast conditions");
+                console.log("Length = " + forecastConditions.length);
+                newForecast += "<ul>";
+                for (i=0; i<forecastConditions.length; i++) {
+                    newForecast += "<li>" + 
+                        "<table>" +
+                        "<tr>" +
+                        "<td>" +
+                        "<img src='images" +  
+                        extractFileName(forecastConditions[i].getElementsByTagName('icon')[0].attributes.getNamedItem('data').value) + "'/>" +
+                        "</td>" + 
+                        "<td>" +
+                        expandDay(forecastConditions[i].getElementsByTagName('day_of_week')[0].attributes.getNamedItem('data').value) +
+                        "<br/><span class='normal'>" + forecastConditions[i].getElementsByTagName('condition')[0].attributes.getNamedItem('data').value + 
+                        "<br/>High:" + f2c(forecastConditions[i].getElementsByTagName('high')[0].attributes.getNamedItem('data').value) +
+                        "&nbsp;Low: " + f2c(forecastConditions[i].getElementsByTagName('low')[0].attributes.getNamedItem('data').value) + "</span>" + 
+                        "</td>" + 
+                        "</table>" +
+                        "</li>";
+                }                
+                newForecast += "</ul>";                
+                element = document.getElementById('forecast');
+                element.innerHTML = newForecast;
+            }
+            navigator.notification.activityStop();
+        };
+        req.send();
+    }
+    
+    function extractFileName(filePath) {
+        var name = filePath.substring(filePath.lastIndexOf('/'), filePath.length);
+        console.log("Name = " + name);
+        return name;
+    }
+    
+    function f2c(temp) {
+        if (localStorage.getItem('units') == "C") {
+            return Math.round((temp-32) * 5 / 9)  + "&deg;C";        
+        } else {
+            return temp + "&deg;F";
+        }
+        
+    }
+    
+    function expandDay(day) {
+        if (day == "Sun") {
+            return "Sunday";
+        }
+        else if (day == "Mon") {
+            return "Monday";
+        }
+        else if (day == "Tue") {
+            return "Tuesday";
+        }
+        else if (day == "Wed") {
+            return "Wednesday";
+        }
+        else if (day == "Thu") {
+            return "Thursday";
+        }
+        else if (day == "Fri") {
+            return "Friday";
+        }
+        else if (day == "Sat") {
+            return "Saturday";
+        }
+    }
+
+    // onError Callback receives a PositionError object
+    //
+    function onError(error) {
+        navigator.notification.activityStop();
+        alert('code: '    + error.code    + '\n' +
+              'message: ' + error.message + '\n');
+    }
+
+    function onMenuKeyDown() {
+        var menu = document.getElementById("menu");
+        if (menu.style.display == "none" || menu.style.display == "") {
+            menu.style.display = "block";
+        } else {
+            menu.style.display = "none";
+        }
+    }
+    
+    function doRefresh() {
+        document.getElementById("menu").style.display = "none";
+        onSuccess({"coords": {"latitude": 45.35003, "longitude": -75.829940}});
+    }
+    
+    function showPref() {
+        document.getElementById("menu").style.display = "none";
+        document.getElementById('container').style.display="none";
+        document.getElementById('preferences').style.display="block";
+        document.addEventListener("backbutton", onBackKey, false);
+        toggleUnits();
+    }
+    
+    function onBackKey() {
+        document.getElementById('preferences').style.display="none";
+        document.getElementById('container').style.display="block";
+        document.removeEventListener("backbutton", onBackKey, false);
+        if (dirtyBit) {
+            dirtyBit = false;
+            onSuccess({"coords": {"latitude": 45.35003, "longitude": -75.829940}});
+        }
+    }
+    
+    function setUnit(unit) {
+        console.log("value is " + unit);
+        localStorage.setItem('units', unit);
+        toggleUnits();
+        dirtyBit = true;
+    }
+    
+    function setGps(status) {
+        console.log("value is " + status);
+        localStorage.setItem('gps', status);
+        toggleGps();
+        dirtyBit = true;
+    }
+    
+    function toggleUnits() {
+        var unit = localStorage.getItem('units');
+        if (unit == "F" || unit == "undefined" || unit == null) {
+           document.getElementById("cUnit").className = "leftBtn";    
+           document.getElementById("fUnit").className = "rightBtnSel";    
+        } else {
+           document.getElementById("cUnit").className = "leftBtnSel";    
+           document.getElementById("fUnit").className = "rightBtn";    
+        }
+    }
+    
+    function toggleGps() {
+        var isGps = localStorage.getItem('gps');
+        console.log("GPS set to " + isGps);
+        if (isGps == "on" || isGps == "undefined" || isGps == null) {
+           document.getElementById("gpsOn").className = "leftBtnSel";    
+           document.getElementById("gpsOff").className = "rightBtn";    
+        } else {
+           document.getElementById("gpsOn").className = "leftBtn";    
+           document.getElementById("gpsOff").className = "rightBtnSel";    
+        }
+    }
+    </script>
+  </head>
+  <body onload="onLoad()">
+      <div id="container">
+          <div id="header">
+              <h1><a href="./">GPS Weather</a></h1>
+          </div>          
+          <div class="content">
+              <h2 class="subTitle">Current Conditions:</h2>
+              <div id="current"></div>
+              <h2 class="subTitle">Forecast:</h2>
+              <div id="forecast"></div>
+          </div>
+      </div>
+      <div id="preferences">
+          <div id="smlHeader">
+              <h1><a href="./">Preferences</a></h1>
+          </div>          
+          <h2 class="subTitle">Unit:</h2>
+          <div id="prefMain">
+              <button id="cUnit" class="leftBtn" type="submit" onclick="setUnit('C')">
+                  &deg;C
+              </button>
+              <button id="fUnit" class="rightBtn" type="submit" onclick="setUnit('F')">
+                  &deg;F
+              </button>
+          </div>
+          <h2 class="subTitle">GPS:</h2>
+          <div id="prefMain">
+              <button id="gpsOn" class="leftBtn" type="submit" onclick="setGps('on')">
+                  On
+              </button>
+              <button id="gpsOff" class="rightBtn" type="submit" onclick="setGps('off')">
+                  Off
+              </button>
+          </div>
+      </div>                    
+      <div id="menu">
+          <button id="prefBtn" type="submit" onclick="showPref()">
+              <img src="images/menu_preferences.png"/><br/>
+              Preferences
+          </button>
+          <button id="refreshBtn" type="submit" onclick="doRefresh()">
+              <img src="images/menu_refresh.png"/><br/>
+              Refresh
+          </button>
+      </div>
+  </body>
+</html>
